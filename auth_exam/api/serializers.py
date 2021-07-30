@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from auth_exam.models import User 
+from auth_exam.models import User ,ToDo
 from rest_framework.validators import UniqueValidator
-from django.contrib.auth import authenticate 
-
+from django.contrib.auth import authenticate  
 from datetime import datetime
 class CreateUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())]) 
@@ -46,10 +45,40 @@ class UserSerializer(serializers.ModelSerializer):
 class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
-
     def validate(self, data):
         user = authenticate(**data)
+        print(user.is_authenticated)
         if user and user.is_active:
             return user 
         raise serializers.ValidationError("Invalid Details.")    
 
+
+
+class ToDoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ToDo
+        fields = ['id' , 'title' , 'description' ,'due' , 'completed' ]
+        extra_kwargs = {
+                'completed' : {'required' : True}  ,
+                'due' : {'required' : True}  ,
+		}	 
+
+
+
+class ToDoDetailedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ToDo 
+        exclude = ('user' , )  
+
+    def save(self):            
+        todo = ToDo.objects.create(
+            user = self.context['user'],
+            title=self.validated_data["title"],
+            description=self.validated_data["description"],
+            completed=self.validated_data["completed"],
+            due = self.validated_data["due"] ,
+        )
+        return todo
+
+
+    

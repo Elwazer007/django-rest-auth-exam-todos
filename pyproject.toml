@@ -10,6 +10,10 @@ virtualenv = "^20.6.0"
 Django = "^3.2.5"
 djangorestframework = "^3.12.4"
 django-rest-knox = "^4.1.0"
+requests = "^2.26.0"
+python-dateutil = "^2.8.2"
+django-unixtimestampfield = "^0.4.0"
+typing-extensions = "^3.10.0"
 
 [tool.poetry.dev-dependencies]
 
