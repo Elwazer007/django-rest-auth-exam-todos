@@ -53,24 +53,20 @@ class LoginUserSerializer(serializers.Serializer):
         raise serializers.ValidationError("Invalid Details.")    
 
 
-
-class ToDoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ToDo
-        fields = ['id' , 'title' , 'description' ,'due' , 'completed' ]
-        extra_kwargs = {
-                'completed' : {'required' : True}  ,
-                'due' : {'required' : True}  ,
-		}	 
-
-
-
 class ToDoDetailedSerializer(serializers.ModelSerializer):
     class Meta:
         model = ToDo 
-        exclude = ('user' , )  
+        exclude = ('user' , ) 
+        extra_kwargs = {
+                'completed' : {'required' : True}  ,   # i found issue here for the completed boolean to be required , i tried some stack over flow and docs solutions and didn't solve it
+                'due' : {'required' : True}  , 
+                'title' : {'required' : True} , 
+                'description' : {'required' : True} , 
+		}	 
 
-    def save(self):            
+    
+    """ def save(self):
+
         todo = ToDo.objects.create(
             user = self.context['user'],
             title=self.validated_data["title"],
@@ -78,7 +74,18 @@ class ToDoDetailedSerializer(serializers.ModelSerializer):
             completed=self.validated_data["completed"],
             due = self.validated_data["due"] ,
         )
-        return todo
+        return todo """
+
+    def create(self, validated_data):
+        return ToDo.objects.create(user = self.context['user'] ,title = self.validated_data['title'] , due = self.validated_data['due'], completed = self.validated_data['completed'] , description = self.validated_data['description'])
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.completed = validated_data.get('created', instance.completed)
+        instance.due =  validated_data.get('due', instance.due)
+        print('------------------------------------------------------------')
+        instance.save()
+        return instance
 
 
     

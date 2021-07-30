@@ -10,7 +10,7 @@ from auth_exam.models import ToDo , User
 from rest_framework.decorators import api_view
 from knox.models import AuthToken 
 from rest_framework.permissions import IsAuthenticated
-from .serializers import CreateUserSerializer  , LoginUserSerializer , UserSerializer , ToDoSerializer , ToDoDetailedSerializer
+from .serializers import CreateUserSerializer  , LoginUserSerializer , UserSerializer  , ToDoDetailedSerializer
 from rest_framework.pagination import PageNumberPagination
 
 @api_view(['POST', ]) 
@@ -48,7 +48,7 @@ class ToDoAPIView(APIView):
         paginator.page_size = 20
         todos = ToDo.objects.filter(user = request.user)
         result_page = paginator.paginate_queryset(todos, request)
-        serializer = ToDoSerializer(result_page , many = True)
+        serializer = ToDoDetailedSerializer(result_page , many = True)
         start = (request.query_params.get('start'))
         limit = (request.query_params.get('limit'))
         if start is not None and limit is not None:
@@ -56,7 +56,7 @@ class ToDoAPIView(APIView):
             limit = int(limit)
             todos = ToDo.objects.filter(user = request.user , id__gte = start , id__lte = start + limit - 1)
             result_page = paginator.paginate_queryset(todos, request)
-            serializer = ToDoSerializer(result_page , many = True)
+            serializer = ToDoDetailedSerializer(result_page , many = True)
 
         return paginator.get_paginated_response(serializer.data)
 
@@ -76,13 +76,13 @@ class ToDoAPIDetailView(APIView):
         if todo.user != request.user:
             return Response({'error':"You don't have permission to delete this."} , status=status.HTTP_401_UNAUTHORIZED)
         todo.delete()
-        return Response("ToDo deleted", status=status.HTTP_204_NO_CONTENT) 
+        return Response({'success' : 'todo deleted successfullt'}, status=status.HTTP_204_NO_CONTENT) 
 
     def put(self , request , *args , **kwargs):
         todo = get_object_or_404(ToDo , pk = kwargs['id'])
         if todo.user != request.user:
             return Response({'error':"You don't have permission to update this."} , status=status.HTTP_401_UNAUTHORIZED)
-        serializer = ToDoSerializer(todo, data=request.data)
+        serializer = ToDoDetailedSerializer(todo, data=request.data , context = {'user':request.user } )
         if serializer.is_valid():
            serializer.save()
            return Response(serializer.data)
@@ -92,10 +92,10 @@ class ToDoAPIDetailView(APIView):
          todo = get_object_or_404(ToDo , pk = kwargs['id']) 
          if todo.user != request.user:
             return Response({'error':"You don't have permission to update this."}) 
-         serializer = ToDoSerializer(todo, data=request.data,  partial=True)
+         serializer = ToDoDetailedSerializer(todo, data=request.data,  partial=True)
          if serializer.is_valid():
             todo = serializer.save()
-            return Response(ToDoSerializer(todo).data)
+            return Response(ToDoDetailedSerializer(todo).data)
          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
